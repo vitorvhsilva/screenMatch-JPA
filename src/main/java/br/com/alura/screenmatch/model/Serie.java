@@ -2,17 +2,29 @@ package br.com.alura.screenmatch.model;
 
 
 import br.com.alura.screenmatch.service.ConsultaChatGPT;
+import jakarta.persistence.*;
+import org.hibernate.annotations.Cascade;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.OptionalDouble;
 
+@Entity
+@Table(name = "TB_SERIES")
 public class Serie {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true)
     private String titulo;
 
     private Integer totalTemporadas;
 
     private Double avaliacao;
 
+    @Enumerated(EnumType.STRING)
     private Categoria genero;
 
     private String atores;
@@ -21,6 +33,9 @@ public class Serie {
 
     private String sinopse;
 
+    @OneToMany(mappedBy = "serie", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Episodio> episodios;
+
     public Serie(DadosSerie dadosSerie) {
         this.titulo = dadosSerie.titulo();
         this.totalTemporadas = dadosSerie.totalTemporadas();
@@ -28,7 +43,22 @@ public class Serie {
         this.genero = Categoria.fromString(dadosSerie.genero().split(",")[0].trim());
         this.atores = dadosSerie.atores();
         this.poster = dadosSerie.poster();
-        this.sinopse = ConsultaChatGPT.obterTraducao(dadosSerie.sinopse()).trim();
+        this.sinopse = dadosSerie.sinopse();
+    }
+
+    public Serie() {
+    }
+
+    public Categoria getGenero() {
+        return genero;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTitulo() {
@@ -53,10 +83,6 @@ public class Serie {
 
     public void setAvaliacao(Double avaliacao) {
         this.avaliacao = avaliacao;
-    }
-
-    public Categoria getGenero() {
-        return genero;
     }
 
     public void setGenero(Categoria genero) {
@@ -87,15 +113,25 @@ public class Serie {
         this.sinopse = sinopse;
     }
 
+    public List<Episodio> getEpisodios() {
+        return episodios;
+    }
+
+    public void setEpisodios(List<Episodio> episodios) {
+        episodios.forEach(e -> e.setSerie(this));
+        this.episodios = episodios;
+    }
+
     @Override
     public String toString() {
-        return
-                "titulo='" + titulo + '\'' +
+        return "id=" + id +
+                ", titulo='" + titulo + '\'' +
                 ", totalTemporadas=" + totalTemporadas +
                 ", avaliacao=" + avaliacao +
                 ", genero=" + genero +
                 ", atores='" + atores + '\'' +
                 ", poster='" + poster + '\'' +
-                ", sinopse='" + sinopse + '\'';
+                ", sinopse='" + sinopse + '\'' +
+                ", episodios=" + episodios;
     }
 }
